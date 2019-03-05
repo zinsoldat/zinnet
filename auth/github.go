@@ -23,8 +23,6 @@ var githhubConfig = &oauth2.Config{
 	Endpoint:     github.Endpoint,
 }
 
-var oauthString = "random-string"
-
 func redirectGithub(w http.ResponseWriter, r *http.Request) {
 	url := githhubConfig.AuthCodeURL(oauthString)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
