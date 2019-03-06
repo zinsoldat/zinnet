@@ -1,22 +1,23 @@
 package oauth
 
 import (
-	"fmt"
-	"net/http"
+	"os"
+
+	"github.com/zinsoldat/zinnet-go/util"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/github"
 )
 
-const (
-	githubUserInfoURL = "https://api.github.com/user/emails"
-)
-
-func RedirectGithub(w http.ResponseWriter, r *http.Request) {
-	url := githhubConfig.AuthCodeURL(oauthString)
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-}
-
-func CallbackGithub(w http.ResponseWriter, r *http.Request) {
-	userInfo, _ := getUserInfo(r.FormValue("state"), r.FormValue("code"), githubUserInfoURL, githhubConfig)
-	fmt.Println(userInfo)
-	http.Redirect(w, r, "/auth", http.StatusTemporaryRedirect)
-	// w.Write([]byte(userInfo))
+func GetGithubProvider() *OAuthProvider {
+	return &OAuthProvider{
+		Name: "github",
+		config: &oauth2.Config{
+			ClientID:     os.Getenv(githubClientID),
+			ClientSecret: os.Getenv(githubClientSecret),
+			Scopes:       []string{"user:email"},
+			Endpoint:     github.Endpoint,
+		},
+		UserInfoURL: "https://api.github.com/user/emails",
+		state:       util.RandString(20),
+	}
 }

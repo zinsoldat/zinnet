@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/zinsoldat/zinnet-go/auth/oauth"
@@ -15,11 +16,21 @@ func index(w http.ResponseWriter, r *http.Request) {
 
 // GetRoutes for auth handling
 func GetRoutes() []models.Route {
-	return []models.Route{
-		{Path: "/auth", Handler: index},
-		{Path: "/auth/github", Handler: oauth.RedirectGithub},
-		{Path: "/auth/github/callback", Handler: oauth.CallbackGithub},
-		{Path: "/auth/google", Handler: oauth.RedirectGoogle},
-		{Path: "/auth/google/callback", Handler: oauth.CallbackGoogle},
+	oauthProviders := []*oauth.OAuthProvider{
+		oauth.GetGoogleProvider(),
+		oauth.GetGithubProvider(),
 	}
+
+	routes := []models.Route{
+		{Path: "/auth", Handler: index},
+	}
+	for _, provider := range oauthProviders {
+		routes = append(routes,
+			models.Route{Path: fmt.Sprintf("/auth/%s", provider.Name), Handler: provider.Redirect},
+		)
+		routes = append(routes,
+			models.Route{Path: fmt.Sprintf("/auth/%s/callback", provider.Name), Handler: provider.Callback},
+		)
+	}
+	return routes
 }

@@ -17,7 +17,6 @@ const (
 	googleClientSecret = "GOOGLE_CLIENT_SECRET"
 	githubClientID     = "GITHUB_CLIENT_ID"
 	githubClientSecret = "GITHUB_CLIENT_SECRET"
-	oauthString        = "random-string"
 )
 
 var (
@@ -37,18 +36,29 @@ var (
 	}
 )
 
-func getUserInfo(state string, code string, url string, config *oauth2.Config) (string, error) {
-	if state != oauthString {
+type OAuthProvider struct {
+	Name            string
+	config          *oauth2.Config
+	UserInfoURL     string
+	state           string
+	parseUserInfo   func(userInfo string) (string, error)
+	RedirectHandler func(w http.ResponseWriter, r *http.Request)
+	CallbackHandler func(w http.ResponseWriter, r *http.Request)
+}
+
+func (provider *OAuthProvider) getUserInfo(state string, code string) (string, error) {
+
+	if state != provider.state {
 		return "", fmt.Errorf("oauth - invalid state")
 	}
 
-	token, err := config.Exchange(context.Background(), code)
+	token, err := provider.config.Exchange(context.Background(), code)
 	if err != nil {
 		return "", fmt.Errorf("oauth - code exchange failed: %s", err.Error())
 	}
 
 	client := http.Client{}
-	req, _ := http.NewRequest("GET", url, nil)
+	req, _ := http.NewRequest("GET", provider.UserInfoURL, nil)
 	token.SetAuthHeader(req)
 	response, err := client.Do(req)
 	if err != nil {
@@ -61,4 +71,16 @@ func getUserInfo(state string, code string, url string, config *oauth2.Config) (
 		return "", fmt.Errorf("oauth - failed to read response body: %s", err.Error())
 	}
 	return string(contents), nil
+}
+
+func (provider *OAuthProvider) Callback(w http.ResponseWriter, r *http.Request) {
+	userInfo, _ := provider.getUserInfo(r.FormValue("state"), r.FormValue("code"))
+	fmt.Println(userInfo)
+	http.Redirect(w, r, "/auth", http.StatusTemporaryRedirect)
+	// w.Write([]byte(userInfo))
+}
+
+func (provider *OAuthProvider) Redirect(w http.ResponseWriter, r *http.Request) {
+	url := provider.config.AuthCodeURL(provider.state)
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }

@@ -1,23 +1,25 @@
 package oauth
 
 import (
-	"fmt"
-	"net/http"
+	"os"
+
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+
+	"github.com/zinsoldat/zinnet-go/util"
 )
 
-const (
-	googleUserInfoURL = "https://www.googleapis.com/oauth2/v2/userinfo"
-)
-
-func RedirectGoogle(w http.ResponseWriter, r *http.Request) {
-	url := googleConfig.AuthCodeURL(oauthString)
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-}
-
-func CallbackGoogle(w http.ResponseWriter, r *http.Request) {
-	userInfo, err := getUserInfo(r.FormValue("state"), r.FormValue("code"), googleUserInfoURL, googleConfig)
-	fmt.Println(err)
-	fmt.Println(userInfo)
-	http.Redirect(w, r, "/auth", http.StatusTemporaryRedirect)
-	// w.Write([]byte(userInfo))
+func GetGoogleProvider() *OAuthProvider {
+	return &OAuthProvider{
+		Name: "google",
+		config: &oauth2.Config{
+			ClientID:     os.Getenv(googleClientID),
+			ClientSecret: os.Getenv(googleClientSecret),
+			RedirectURL:  "http://localhost:3000/auth/google/callback",
+			Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
+			Endpoint:     google.Endpoint,
+		},
+		UserInfoURL: "https://www.googleapis.com/oauth2/v2/userinfo",
+		state:       util.RandString(20),
+	}
 }
