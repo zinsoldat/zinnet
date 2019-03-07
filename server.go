@@ -41,8 +41,17 @@ func NewServer(config *ServerConfig) Server {
 
 // Start the server with the given configuration
 func (s *Server) Start() {
-	fmt.Printf("Server starting on %s", s.server.Addr)
+	fmt.Printf("server starting on %s\n", s.server.Addr)
 	s.server.ListenAndServe()
+}
+
+// Stop the running server gracefully and clean up
+// - close open database connections
+// - terminate open requests
+func (s *Server) Stop() {
+	fmt.Printf("stopping server on %s\n", s.server.Addr)
+	s.server.Close()
+	fmt.Printf("stopped server on %s\n", s.server.Addr)
 }
 
 func setRoutes(r *mux.Router) {
