@@ -3,7 +3,7 @@ package util_test
 import (
 	"testing"
 
-	"github.com/zinsoldat/zinnet/util"
+	"github.com/zinsoldat/zinnet-go/util"
 )
 
 func TestRandString(t *testing.T) {
