@@ -3,11 +3,13 @@ package users
 import (
 	"net/http"
 
+	"github.com/labstack/echo"
 	"github.com/zinsoldat/zinnet-go/models"
 )
 
-func getAll(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("get all users"))
+func getAll(e echo.Context) error {
+	e.String(http.StatusOK, "get all users")
+	return nil
 }
 
 // GetRoutes for users handling

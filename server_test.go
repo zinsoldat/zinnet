@@ -19,10 +19,6 @@ func TestCreateServer(t *testing.T) {
 }
 
 func TestServerStart(t *testing.T) {
-	serverConfig := &zinnet.ServerConfig{
-		Port: 8888,
-		Host: "127.0.0.1",
-	}
 	server := zinnet.NewServer(serverConfig)
 	server.Start()
 	defer server.Stop()

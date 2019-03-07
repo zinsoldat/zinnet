@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/labstack/echo"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/google"
@@ -42,8 +43,8 @@ type OAuthProvider struct {
 	UserInfoURL     string
 	state           string
 	parseUserInfo   func(userInfo string) (string, error)
-	RedirectHandler func(w http.ResponseWriter, r *http.Request)
-	CallbackHandler func(w http.ResponseWriter, r *http.Request)
+	RedirectHandler func(c echo.Context) error
+	CallbackHandler func(c echo.Context) error
 }
 
 func (provider *OAuthProvider) getUserInfo(state string, code string) (string, error) {
@@ -73,14 +74,24 @@ func (provider *OAuthProvider) getUserInfo(state string, code string) (string, e
 	return string(contents), nil
 }
 
-func (provider *OAuthProvider) Callback(w http.ResponseWriter, r *http.Request) {
-	userInfo, _ := provider.getUserInfo(r.FormValue("state"), r.FormValue("code"))
-	fmt.Println(userInfo)
-	http.Redirect(w, r, "/auth", http.StatusTemporaryRedirect)
-	// w.Write([]byte(userInfo))
+type OAuthCallbackData struct {
+	state string
+	code  string
 }
 
-func (provider *OAuthProvider) Redirect(w http.ResponseWriter, r *http.Request) {
+func (provider *OAuthProvider) Callback(c echo.Context) error {
+	data := new(OAuthCallbackData)
+	if err := c.Bind(data); err != nil {
+		return err
+	}
+	userInfo, _ := provider.getUserInfo(data.state, data.code)
+	fmt.Println(userInfo)
+	c.Redirect(http.StatusTemporaryRedirect, "/auth")
+	return nil
+}
+
+func (provider *OAuthProvider) Redirect(c echo.Context) error {
 	url := provider.config.AuthCodeURL(provider.state)
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+	c.Redirect(http.StatusTemporaryRedirect, url)
+	return nil
 }

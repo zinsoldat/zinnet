@@ -1,8 +1,9 @@
 package models
 
-import "net/http"
+import "github.com/labstack/echo"
 
 type Route struct {
 	Path    string
-	Handler func(w http.ResponseWriter, r *http.Request)
+	Method  string
+	Handler func(e echo.Context) error
 }
