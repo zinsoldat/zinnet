@@ -16,26 +16,36 @@ type Server struct {
 	server *http.Server
 }
 
-// ServerConfig struct to configure a server
+// ServerConfig struct to configure a `Server` with the `NewServer` method
 type ServerConfig struct {
 	Port int16
 	Host string
 }
 
-// Start the server with the given configuration
-func (s *Server) Start(config ServerConfig) {
-	router := mux.NewRouter()
-	initlizeRoutes(router)
+// NewServer creates a new server struct with the given `ServerConfig`.
+// During creation the routes of the server are set.
+func NewServer(config *ServerConfig) Server {
 
-	s.server = &http.Server{
-		Handler:      router,
-		Addr:         fmt.Sprintf("%s:%d", config.Host, config.Port),
-		WriteTimeout: 5 * time.Second,
-		ReadTimeout:  5 * time.Second,
+	router := mux.NewRouter()
+	setRoutes(router)
+
+	return Server{
+		server: &http.Server{
+			Handler:      router,
+			Addr:         fmt.Sprintf("%s:%d", config.Host, config.Port),
+			WriteTimeout: 5 * time.Second,
+			ReadTimeout:  5 * time.Second,
+		},
 	}
 }
 
-func initlizeRoutes(r *mux.Router) {
+// Start the server with the given configuration
+func (s *Server) Start() {
+	fmt.Printf("Server starting on %s", s.server.Addr)
+	s.server.ListenAndServe()
+}
+
+func setRoutes(r *mux.Router) {
 	routes := [][]models.Route{
 		auth.GetRoutes(),
 		users.GetRoutes(),
