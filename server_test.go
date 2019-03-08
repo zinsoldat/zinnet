@@ -20,7 +20,7 @@ func TestCreateServer(t *testing.T) {
 
 func TestServerStart(t *testing.T) {
 	server := zinnet.NewServer(serverConfig)
-	server.Start()
+	go server.Start()
 	defer server.Stop()
 
 	request, _ := http.NewRequest("GET", fmt.Sprintf("http://%s:%d", serverConfig.Host, serverConfig.Port), nil)
